@@ -4,12 +4,14 @@
 #v2 add var_prm replace prm_value
 #v3 use numpy.linspace replace range
 #v4 增加中文註解，去除包含指定變數名稱的變數
+#v5 增加Beep 去除不必要的註解
 
 
 
 #===============================================
 import os,subprocess,re
 import numpy as np
+import winsound
 
 def str_tuned(var_prm,prm_value):
 
@@ -19,7 +21,7 @@ def str_tuned(var_prm,prm_value):
     #print(prm_tuned)
     return prm_tuned
 #===============================================
-
+#隱藏CMD
 if os.name == 'nt':
     startupinfo = subprocess.STARTUPINFO()
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -28,10 +30,11 @@ else:
     startupinfo = None
 
 #===============================================
-
+# Setting workspace
 current_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830"
 os.chdir(current_path)  
 
+#input prm
 prm_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\E5-SKYPE-Handfree-wb-dt-ISSUE_20180927_tuned.prm"
 #print(prm_path)
 f=open(prm_path,'r')
@@ -41,11 +44,11 @@ f.close()
 config_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\fvsam_wb_407_config.prm"
 config_file=open(config_path,'r')
 
-var_prm="MIN_EQ_RE_EST_1"
+var_prm="DTD_THR3"
 
-num_start=0
+num_start=0.998
 num_end=1
-num_step=4
+num_step=5
 
 #num_step=int((num_end-num_start)/num_step+1)
 
@@ -80,12 +83,6 @@ for i  in val:
                 print(line)
                 prm_tuned=str_tuned(line,i_hex) +"\n"
                 print(prm_tuned)
-        '''            
-        if "EAD_THR_FC" in line:
-            #print(line)
-            prm_tuned=str_tuned(line,6666) +"\n"
-            #print(prm_tuned)
-        '''
         
         output_file.write(prm_tuned)            
 
@@ -106,7 +103,7 @@ for i  in val:
         
         if "FVSAM_FNAME_LOUTWAV" in config_line:
 
-            prm_tuned=config_line.replace("v0","v"+str(i_hex)+"_"+str(round(i/32767,2)))
+            prm_tuned=config_line.replace("v0","v"+str(i_hex)+"_"+str(round(i/32767,5)))
 
         config_out_file.write(prm_tuned)
 
@@ -121,4 +118,7 @@ for i  in val:
 #========================================= end of val
 
 
-
+winsound.Beep(600,100)
+winsound.Beep(600,100)
+winsound.Beep(600,100)
+#其中600表示声音大小，1000表示发生时长，1000为1秒
