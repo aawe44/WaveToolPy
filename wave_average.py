@@ -2,7 +2,7 @@ import wave
 import matplotlib.pyplot as plt
 import numpy as np
 
-def my_plot(file,start_time, time_duration):
+def my_wave_average(file,start_time, time_duration):
         
     f = wave.open(file, "rb")
 
@@ -28,16 +28,25 @@ def my_plot(file,start_time, time_duration):
     frame_duration=int(time_duration*framerate/1000)
     
     wave_data=wave_data[0,frame_start:(frame_start+frame_duration)]
-    
-    plt.figure()
-    plt.plot(wave_data)
-    plt.show()
-    plt.close()
+
+    return np.average(wave_data)
     
 #==============================
     
 file = r"vptx_out.is880.B3.04.wav"
 
-my_plot(file,5000,1000)       #unit: ms
+wave_average=my_wave_average(file,5000,1000)       #unit: ms
 
-print("done")
+print(wave_average)
+
+
+
+
+
+
+
+
+
+
+
+
