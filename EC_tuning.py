@@ -1,6 +1,13 @@
+# -*- coding: utf-8 -*-
+# 中文註解
+
 #v2 add var_prm replace prm_value
 #v3 use numpy.linspace replace range
+#v4 增加中文註解，去除包含指定變數名稱的變數
 
+
+
+#===============================================
 import os,subprocess,re
 import numpy as np
 
@@ -64,15 +71,21 @@ for i  in val:
         prm_tuned=line
         if var_prm in line:
             
-            print(line)
-            prm_tuned=str_tuned(line,i_hex) +"\n"
-            print(prm_tuned)
-            
+            temp=line.split(".")
+            temp=temp[1]
+            temp=temp.split()
+            temp=temp[0]
+
+            if temp == var_prm:            
+                print(line)
+                prm_tuned=str_tuned(line,i_hex) +"\n"
+                print(prm_tuned)
+        '''            
         if "EAD_THR_FC" in line:
             #print(line)
             prm_tuned=str_tuned(line,6666) +"\n"
             #print(prm_tuned)
-            
+        '''
         
         output_file.write(prm_tuned)            
 

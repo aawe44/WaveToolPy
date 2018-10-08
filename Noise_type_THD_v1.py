@@ -1,124 +1,95 @@
-# -*- coding: utf-8 -*-
-# 中文註解
-
-#v2 add var_prm replace prm_value
-#v3 use numpy.linspace replace range
-#v4 增加中文註解，去除包含指定變數名稱的變數
-
-
-
-#===============================================
-import os,subprocess,re
+import wave
+import matplotlib.pyplot as plt
 import numpy as np
 
-def str_tuned(var_prm,prm_value):
+def endpoint_dect(wave_data):
+    # split the duration of noise 
+    diff=[]
+    flag=0
 
-    right_prm=var_prm[-5:]
-    prm_tuned=var_prm.replace(right_prm,str(prm_value))
-    #print(right_prm)
-    #print(prm_tuned)
-    return prm_tuned
-#===============================================
+    for i in range(0,nframes):
+        if abs(wave_data[i])>0:
+            flag=1
+        else:
+            flag=0
+        diff.append(flag)
 
-if os.name == 'nt':
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    startupinfo.wShowWindow = subprocess.SW_HIDE
-else:
-    startupinfo = None
+    x=np.array(diff)
 
-#===============================================
+    # check startpoint/ endpoit
+    startpoint=[]
+    endpoint=[]
 
-current_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830"
-os.chdir(current_path)  
+    x=np.diff(x)
 
-prm_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\E5-SKYPE-Handfree-wb-dt-ISSUE_20180927_tuned.prm"
-#print(prm_path)
-f=open(prm_path,'r')
-lines=f.readlines()
+    for i in range(x.size):
+        if x[i]>0:
+            startpoint=np.append(startpoint,i)
+        if x[i]<0:
+            endpoint=np.append(endpoint,i)
+          
+    output=np.vstack((startpoint,endpoint))
+    return output
+# end of  endpoint_dect
+#==================================================
+
+file = r"D:\Work\20180718_Recording_Crash_QA\ReleaseTest\check_no_sound\01_vptx_out.HSWB.TS.tuned.wav"
+#file = r"D:\Work\20180718_Recording_Crash_QA\ReleaseTest\check_no_sound\vptx_out.is880.B3.04.wav"
+
+f = wave.open(file, "rb")
+
+params = f.getparams()
+nchannels, sampwidth, framerate, nframes = params[:4]
+
+'''
+print ("Frame Rate: " +  str(framerate))
+print ("Channel Number: " +  str(nchannels))
+print ("Sample Width: " +  str(sampwidth))
+print ("Sample frames: " +  str(nframes))
+'''
+
+str_data = f.readframes(nframes)
 f.close()
 
-config_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\fvsam_wb_407_config.prm"
-config_file=open(config_path,'r')
+str_data = np.fromstring(str_data, dtype=np.short)
+str_data.shape = -1, nchannels
+str_data = str_data.T
 
-var_prm="MIN_EQ_RE_EST_1"
+time = np.arange(0, nframes) * (1.0 / framerate)
 
-num_start=0
-num_end=1
-num_step=4
+all_channel_val=[]
+wave_data=[]
 
-#num_step=int((num_end-num_start)/num_step+1)
-
-num_start=int(num_start*32767)
-num_end=int(num_end*32767)
-
-val=np.linspace(num_start,num_end,num_step)
-
-
-#=========================================
-for i  in val:
-
-    output_prm=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\E5-SKYPE-Handfree-wb-dt-ISSUE_20180927_tuned_v2.prm"
-    #print(output_prm)
-    output_file=open(output_prm,'w')
-
-    i_hex=hex(int(i))
-    i_hex=i_hex[2:].upper()
+for i in range(3,7):
     
-    for line in lines:
-        # print(line)
+    wave_data=str_data[i]
+    #print(endpoint_dect(wave_data)/framerate)
+    
+    endpoint=endpoint_dect(wave_data)
+    endpoint=np.array(endpoint,dtype=np.int)
 
-        prm_tuned=line
-        if var_prm in line:
-            
-            temp=line.split(".")
-            temp=temp[1]
-            temp=temp.split()
-            temp=temp[0]
+    channel_val=[]
+    temp=[]
 
-            if temp == var_prm:            
-                print(line)
-                prm_tuned=str_tuned(line,i_hex) +"\n"
-                print(prm_tuned)
-        '''            
-        if "EAD_THR_FC" in line:
-            #print(line)
-            prm_tuned=str_tuned(line,6666) +"\n"
-            #print(prm_tuned)
-        '''
+    for val in endpoint.T:
+
+        wav_duration=wave_data[val[0]:val[1]]
+        wav_duration = wav_duration.compress((wav_duration!=0).flat)
+
+        wav_max=max(wav_duration)
+        wav_min=min(wav_duration)
         
-        output_file.write(prm_tuned)            
+        temp=np.vstack((wav_max,wav_min))
+        channel_val=np.append(channel_val,temp)
 
-    output_file.close()
+    all_channel_val=np.append(all_channel_val,channel_val)
 
-    #======================================================
+print(all_channel_val.reshape(4,8))
+print('Done !!!')
 
-    config_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\fvsam_wb_407_config.prm"
-    config_file=open(config_path,'r')
-    config_lines=config_file.readlines()
-
-    config_out_path=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\input_prm_mm\fvsam_wb_407_config_out.prm"
-    config_out_file=open(config_out_path,'w')
-
-    for config_line in config_lines:
-
-        prm_tuned=config_line
-        
-        if "FVSAM_FNAME_LOUTWAV" in config_line:
-
-            prm_tuned=config_line.replace("v0","v"+str(i_hex)+"_"+str(round(i/32767,2)))
-
-        config_out_file.write(prm_tuned)
-
-    config_out_file.close()
-
-    exe_cmd=r"D:\Work\20180919_XM_issue\v.4.0.7_release_20180830\fvsam_app_mi.exe "+ config_out_path
-    #print(exe_cmd)
-
-    subprocess.call(exe_cmd,startupinfo=startupinfo)
+np.savetxt('Noise_type_THD.txt',all_channel_val.reshape(4,8),fmt='%d',delimiter=' ')
 
 
-#========================================= end of val
 
 
 
