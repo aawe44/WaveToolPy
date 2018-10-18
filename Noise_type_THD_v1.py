@@ -1,6 +1,6 @@
 #2018/10/16 add select channel and num_of_noise
 #2018/10/17 add stable time; add my_array_check to delete small duration
-#2018/10/18 add xlsx output
+#2018/10/18 add xlsx output, fixed reshape
 
 
 import wave
@@ -95,7 +95,7 @@ wave_data=[]
 select_channels=range(2,7)
 
 for i in select_channels:
-    print("Running channel: ",i+1)
+    print("Channel: ",i+1)
     wave_data=str_data[i]
 #    print(endpoint_dect(wave_data)/framerate)
 
@@ -116,7 +116,11 @@ for i in select_channels:
         temp=np.vstack((wav_max,wav_min))
         channel_val=np.append(channel_val,temp)
     all_channel_val=np.append(all_channel_val,channel_val)
-all_channel_val=all_channel_val.reshape(5,num_of_noise*2)
+
+reshape_m=len(select_channels)
+reshape_n=num_of_noise*2
+
+all_channel_val=all_channel_val.reshape(reshape_m,reshape_n)
 
 #print(all_channel_val)
 print('Done !!!')
